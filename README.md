@@ -1,4 +1,4 @@
-# Ore-biome-Reborn
+# Ore-biome-Reforged
 添加了一个铺满矿石的生物群系。
 # <模组名> / Ore Biome Reforged
 
