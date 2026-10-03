@@ -1,6 +1,4 @@
-# Ore-biome-Reforged
-添加了一个铺满矿石的生物群系。
-# <模组名> / Ore Biome Reforged
+# Ore Biome Reforged
 
 > 一个受 **矿石生态群系（Ore Biome）** 启发，为 **Forge 1.20.1** 重新设计的矿石生态群系模组。  
 > A Forge 1.20.1 mod inspired by Ore Biome, rebuilt with a modern config GUI and ore scanning.
