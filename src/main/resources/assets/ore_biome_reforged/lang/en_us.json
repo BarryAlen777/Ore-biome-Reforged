@@ -1,0 +1,8 @@
+{
+  "biome.ore_biome_reforged.ore_biome": "Ore Biome",
+  "commands.orebiome.found": "Nearest Ore Biome: X=%s, Y=%s, Z=%s (about %s blocks away)",
+  "commands.orebiome.tp_hint": "Run /orebiome tp to travel there",
+  "commands.orebiome.success": "Teleported to the nearest Ore Biome (X=%s, Z=%s)",
+  "commands.orebiome.not_found": "No Ore Biome found within %s blocks - try another direction",
+  "commands.orebiome.reloaded": "Ore biome config reloaded from file"
+}

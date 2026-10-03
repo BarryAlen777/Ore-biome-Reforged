@@ -1,0 +1,147 @@
+{
+  "temperature": 0.8,
+  "downfall": 0.5,
+  "has_precipitation": true,
+  "effects": {
+    "sky_color": 5999756,
+    "fog_color": 3755858,
+    "water_color": 3050379,
+    "water_fog_color": 1986383,
+    "grass_color": 7319418,
+    "foliage_color": 5148510,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "minecraft:zombie",
+        "weight": 50,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:skeleton",
+        "weight": 40,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:creeper",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "minecraft:spider",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:sheep",
+        "weight": 12,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:pig",
+        "weight": 10,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:cow",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 3
+      }
+    ],
+    "ambient": [
+      {
+        "type": "minecraft:bat",
+        "weight": 10,
+        "minCount": 8,
+        "maxCount": 8
+      }
+    ],
+    "axolotls": [],
+    "underground_water_creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "weight": 10,
+        "minCount": 4,
+        "maxCount": 6
+      }
+    ],
+    "water_creature": [],
+    "water_ambient": [
+      {
+        "type": "minecraft:cod",
+        "weight": 10,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [
+      "minecraft:lake_lava_underground",
+      "minecraft:lake_lava_surface"
+    ],
+    [
+      "minecraft:amethyst_geode"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep"
+    ],
+    [],
+    [],
+    [
+      "ore_biome_reforged:coal",
+      "ore_biome_reforged:coal_surface",
+      "ore_biome_reforged:copper",
+      "ore_biome_reforged:copper_surface",
+      "ore_biome_reforged:iron",
+      "ore_biome_reforged:iron_surface",
+      "ore_biome_reforged:gold",
+      "ore_biome_reforged:gold_surface",
+      "ore_biome_reforged:redstone",
+      "ore_biome_reforged:redstone_surface",
+      "ore_biome_reforged:lapis",
+      "ore_biome_reforged:lapis_surface",
+      "ore_biome_reforged:diamond",
+      "ore_biome_reforged:diamond_surface",
+      "ore_biome_reforged:emerald",
+      "ore_biome_reforged:emerald_surface",
+      "ore_biome_reforged:mod_ores",
+    "ore_biome_reforged:dense_ore_layer"
+    ],
+    [],
+    [
+      "minecraft:spring_water",
+      "minecraft:spring_lava"
+    ],
+    [],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

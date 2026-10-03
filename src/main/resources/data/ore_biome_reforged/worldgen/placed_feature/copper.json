@@ -1,0 +1,11 @@
+{
+  "feature": "ore_biome_reforged:copper",
+  "placement": [
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

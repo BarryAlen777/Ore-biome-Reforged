@@ -1,0 +1,26 @@
+{
+  "mappings": {
+    "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
+      "getNoiseBiome": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
+      "getNoiseBiome(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
+      "parameters": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;",
+      "parameters()Lnet/minecraft/world/level/biome/Climate$ParameterList;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;"
+    },
+    "cn/blockforge/generated/orebiomereborn/mixin/OverworldBiomeBuilderMixin": {
+      "addBiomes": "Lnet/minecraft/world/level/biome/OverworldBiomeBuilder;m_187175_(Ljava/util/function/Consumer;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
+        "getNoiseBiome": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
+        "getNoiseBiome(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
+        "parameters": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;",
+        "parameters()Lnet/minecraft/world/level/biome/Climate$ParameterList;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;"
+      },
+      "cn/blockforge/generated/orebiomereborn/mixin/OverworldBiomeBuilderMixin": {
+        "addBiomes": "Lnet/minecraft/world/level/biome/OverworldBiomeBuilder;m_187175_(Ljava/util/function/Consumer;)V"
+      }
+    }
+  }
+}

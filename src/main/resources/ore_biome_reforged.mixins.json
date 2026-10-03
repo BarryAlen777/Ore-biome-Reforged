@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cn.blockforge.generated.orebiomereborn.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ore_biome_reforged.refmap.json",
+  "mixins": [
+    "MultiNoiseBiomeSourceMixin",
+    "OverworldBiomeBuilderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

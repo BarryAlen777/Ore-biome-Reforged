@@ -1,0 +1,25 @@
+plugins { id 'java'; id 'net.minecraftforge.gradle' version '[6.0,6.2)' }
+version = '1.1.0-r20'
+group = 'cn.blockforge.generated.orebiomereborn'
+base { archivesName = 'ore_biome_reforged' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+minecraft { mappings channel: 'official', version: '1.20.1' }
+dependencies { minecraft 'net.minecraftforge:forge:1.20.1-47.4.0' }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+processResources {
+    // mod_name 就是游戏/启动器里看到的模组名，这里直接用中文「矿石生态群系」
+    def props = [mod_id: 'ore_biome_reforged', mod_name: '矿石生态群系', mod_version: project.version,
+                 minecraft_version: '1.20.1', forge_version: '47.4.0']
+    inputs.properties props
+    filteringCharset = 'UTF-8'
+    filesMatching('META-INF/mods.toml') { expand props }
+}
+jar {
+    // 告诉 Forge 这个 mod 里带了一份 Mixin 配置（把矿石群系插进主世界群系表）
+    manifest {
+        attributes(['MixinConfigs': 'ore_biome_reforged.mixins.json'])
+    }
+    // MIT 协议的正文也随 jar 一起分发
+    from('LICENSE') { into 'META-INF' }
+}
+jar.finalizedBy('reobfJar')
