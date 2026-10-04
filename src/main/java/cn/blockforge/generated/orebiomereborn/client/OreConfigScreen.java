@@ -56,7 +56,8 @@ public class OreConfigScreen extends Screen {
     private static final int FOOTER_HEIGHT = 26;
     private static final int TAB_WIDTH = 118;
     private static final int TAB_HEIGHT = 22;
-    private static final int TAB_GAP = 25;
+    /** 页签间距。这一版多了一个「群系大小」页签，压到 22 才放得下五个。 */
+    private static final int TAB_GAP = 22;
     private static final int ROW_HEIGHT = 25;
 
     private static final Pattern ORE_NAME = Pattern.compile("(^|_)ores?($|_)");
@@ -111,9 +112,11 @@ public class OreConfigScreen extends Screen {
                 "矿石密度", ButtonStyle.TAB, () -> tab == 2, () -> true, () -> switchTab(2)));
         addRenderableWidget(new FlatButton(tabX, tabY + TAB_GAP * 3, TAB_WIDTH, TAB_HEIGHT,
                 "出生点保护", ButtonStyle.TAB, () -> tab == 3, () -> true, () -> switchTab(3)));
+        addRenderableWidget(new FlatButton(tabX, tabY + TAB_GAP * 4, TAB_WIDTH, TAB_HEIGHT,
+                "群系大小", ButtonStyle.TAB, () -> tab == 4, () -> true, () -> switchTab(4)));
 
-        // 页签下方的功能按钮（按页签显示/隐藏）
-        int sideY = tabY + TAB_GAP * 4 + 6;
+        // 页签下方的功能按钮（按页签显示/隐藏）。位置要让开下面第 5 个页签。
+        int sideY = tabY + TAB_GAP * 5 + 6;
         addRenderableWidget(new FlatButton(tabX, sideY, TAB_WIDTH, 20,
                 "一键扫描模组矿石", ButtonStyle.WOOD, () -> tab == 1, this::scanModOres));
         addRenderableWidget(new FlatButton(tabX, sideY + 24, TAB_WIDTH, 20,
@@ -199,7 +202,8 @@ public class OreConfigScreen extends Screen {
             case 0 -> "Minecraft 原版";
             case 1 -> "整合包模组";
             case 2 -> "矿石密度";
-            default -> "出生点保护";
+            case 3 -> "出生点保护";
+            default -> "群系大小";
         };
         drawTitle(graphics, side, tabX, bodyY + 6, 0xFFFFE0B0);
 
@@ -207,7 +211,8 @@ public class OreConfigScreen extends Screen {
             case 0 -> "原版矿石（勾选 = 会生成）";
             case 1 -> "模组矿石（先点左边的扫描按钮）";
             case 2 -> "选择一档矿石密度";
-            default -> "矿石群系离出生点多远才开始生成";
+            case 3 -> "矿石群系离出生点多远才开始生成";
+            default -> "选择矿石群系的大小（当前：" + biomeSizeLabel() + "）";
         };
         if (tab == 1) {
             int on = 0;
@@ -223,23 +228,40 @@ public class OreConfigScreen extends Screen {
                 0xFFFFE0B0);
     }
 
-    /** 密度页 / 出生点保护页的说明文字，画在列表底板之上才不会被盖暗。 */
+    /**
+     * 各页的说明文字，画在列表底板之上才不会被盖暗。
+     * 每一页的说明只在选中那一页时才画：以前「群系大小」的说明写在兜底
+     * else 分支里，切到矿石开关页也会照画，叠在矿石列表上就是用户看到的
+     * 「字体堆积」。
+     */
     private void drawNotes(GuiGraphics graphics) {
         if (tab == 2) {
             int noteY = listTop + 3 * ROW_HEIGHT + 16;
-            drawTitle(graphics, "密度改的是「地表往下那几格里，有多少石头变成矿石」",
+            drawTitle(graphics, "密度改的是「地表往下那几格里，有多少泥土和石头变成矿石」",
                     contentX + 2, noteY, 0xFFE5D9D0);
-            drawTitle(graphics, "稠密：往下 26 格、约 34% 换矿；适中：14 格、16%；稀疏：6 格、6%",
+            drawTitle(graphics, "稠密：往下 26 格；适中：14 格；稀疏：6 格",
                     contentX + 2, noteY + 12, 0xFFE5D9D0);
+            drawTitle(graphics, "地表那一格用双倍换矿率（稠密约 68%、适中 32%、稀疏 12%），所以地表会露出矿石",
+                    contentX + 2, noteY + 24, 0xFFE5D9D0);
+            drawTitle(graphics, "没变成矿石的草皮和泥土会统一换成石头，地表不会留绿斑",
+                    contentX + 2, noteY + 36, 0xFFE5D9D0);
             drawTitle(graphics, "已经生成过的区块不会变，要去没走过的新区域才看得到效果",
-                    contentX + 2, noteY + 24, 0xFFFFD080);
+                    contentX + 2, noteY + 48, 0xFFFFD080);
         } else if (tab == 3) {
             int noteY = listTop + 5 * ROW_HEIGHT + 16;
-            drawTitle(graphics, "保护圈以内：不会出现矿石群系，长的是平原、恶地这些普通地形",
+            drawTitle(graphics, "保护圈以内：不长矿石群系，长的是平原、恶地这些普通地形",
                     contentX + 2, noteY, 0xFFE5D9D0);
-            drawTitle(graphics, "也就是说圈里一颗模组矿都没有；出了圈才开始满地是矿",
+            drawTitle(graphics, "出了圈才会遇到矿石群系；遇到就有矿，不会再出现「有群系却没矿」的死地",
                     contentX + 2, noteY + 12, 0xFFE5D9D0);
             drawTitle(graphics, "只对之后新生成的区块生效；圈的大小随时可以在这里改",
+                    contentX + 2, noteY + 24, 0xFFFFD080);
+        } else if (tab == 4) {
+            int noteY = listTop + 4 * ROW_HEIGHT + 16;
+            drawTitle(graphics, "矿石片区只出现在陆地：海洋、河流、沙滩、恶地都不会有",
+                    contentX + 2, noteY, 0xFFE5D9D0);
+            drawTitle(graphics, "小 ≈ 一片直径约 160 格；中 ≈ 320 格；大 ≈ 640 格；超级 ≈ 2560 格",
+                    contentX + 2, noteY + 12, 0xFFE5D9D0);
+            drawTitle(graphics, "片区外会自然回到原版群系；改完要退出世界再进，旧区块不会变化",
                     contentX + 2, noteY + 24, 0xFFFFD080);
         }
     }
@@ -255,6 +277,15 @@ public class OreConfigScreen extends Screen {
     private String spawnDistanceLabel() {
         int distance = working.spawnDistance();
         return distance <= 0 ? "关" : distance + " 格";
+    }
+
+    private String biomeSizeLabel() {
+        return switch (working.biomeSize()) {
+            case SMALL -> "小";
+            case MEDIUM -> "中";
+            case LARGE -> "大";
+            case HUGE -> "超级";
+        };
     }
 
     /** 16x16 贴图平铺一块矩形，超出部分裁掉。 */
@@ -419,12 +450,21 @@ public class OreConfigScreen extends Screen {
             rows.add(densityRow("sparse", "稀疏：矿脉少，基本只在 0 层以上", Items.COAL_ORE));
             rows.add(densityRow("moderate", "适中：地表有一层矿石，地下矿脉较密", Items.IRON_ORE));
             rows.add(densityRow("dense", "稠密：地表铺满矿石，最接近经典版观感", Items.DIAMOND_ORE));
-        } else {
-            rows.add(spawnRow(0, "不保护：贴着出生点也会刷矿"));
-            rows.add(spawnRow(500, "500 格：小圈保护"));
-            rows.add(spawnRow(1000, "1000 格：推荐，出门走两三分钟出圈"));
+        } else if (tab == 3) {
+            rows.add(spawnRow(0, "不保护：出生点旁边也能长矿石群系"));
+            rows.add(spawnRow(256, "256 格：小圈保护，走几步就出圈"));
+            rows.add(spawnRow(1000, "1000 格：推荐，出门走两三分钟"));
             rows.add(spawnRow(2000, "2000 格：大圈保护"));
             rows.add(spawnRow(4000, "4000 格：要跑很远才找得到群系"));
+        } else {
+            rows.add(biomeSizeRow("small", "小群系：一片直径约 160 格，最好找矿",
+                    Items.STONE));
+            rows.add(biomeSizeRow("medium", "中群系：一片直径约 320 格（推荐）",
+                    Items.COBBLESTONE));
+            rows.add(biomeSizeRow("large", "大群系：一片直径约 640 格，能逛一会儿",
+                    Items.COBBLED_DEEPSLATE));
+            rows.add(biomeSizeRow("huge", "超级群系：一片直径约 2560 格，慎选",
+                    Items.OBSIDIAN));
         }
         return rows;
     }
@@ -452,6 +492,17 @@ public class OreConfigScreen extends Screen {
             status = distance == 0
                     ? "出生点保护已关闭，点应用后生效"
                     : "出生点保护已设为 " + distance + " 格，点应用后生效";
+        });
+    }
+
+    /** 群系大小页的一行：点它就换一档群系大小。 */
+    private Row biomeSizeRow(String value, String label,
+            net.minecraft.world.item.Item item) {
+        return new Row(new ItemStack(item), label,
+                working.biomeSize().key().equals(value), () -> {
+            working.biomeSize = value;
+            dirty = true;
+            status = "群系大小已设为「" + biomeSizeLabel() + "」，退出世界再进才生效";
         });
     }
 
@@ -612,6 +663,8 @@ public class OreConfigScreen extends Screen {
         OreBiomeSettings defaults = OreBiomeSettings.defaults();
         working.vanillaOres = new LinkedHashMap<>(defaults.vanillaOres);
         working.density = defaults.density;
+        // 群系大小也要一起回到默认值（中）
+        working.biomeSize = defaults.biomeSize;
         // 出生点保护也要一起回到默认值，否则「恢复默认」后保护圈还是原来改过的大小
         working.minSpawnDistance = defaults.minSpawnDistance;
         for (String key : working.modOres.keySet()) {

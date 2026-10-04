@@ -49,10 +49,9 @@ public class ModOreFeature extends Feature<NoneFeatureConfiguration> {
 
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> ctx) {
-        // 出生点保护：半径以内的区块不放模组矿脉
-        if (SpawnGuard.tooCloseToSpawn(ctx.level(), ctx.origin())) {
-            return false;
-        }
+        // 出生点保护不在这里拦：圈内根本不会长矿石群系，矿物也就没机会生成。
+        // 以前在这里 return false 会让「群系在圈内露出来」时一颗矿都没有，
+        // 看起来就是模组坏了。详见 ConfigurableOreFeature 里的说明。
         OreBiomeSettings settings = OreBiomeSettings.get();
         if (settings.modOres.isEmpty()) {
             return false;

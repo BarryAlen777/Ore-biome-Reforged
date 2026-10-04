@@ -2,20 +2,25 @@ package cn.blockforge.generated.orebiomereborn.command;
 
 import cn.blockforge.generated.orebiomereborn.config.OreBiomeSettings;
 import cn.blockforge.generated.orebiomereborn.registry.ModBiomes;
+import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomeDiagnostics;
+import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomePatchMask;
 import cn.blockforge.generated.orebiomereborn.worldgen.OrePool;
+import cn.blockforge.generated.orebiomereborn.worldgen.SpawnGuard;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -41,12 +46,11 @@ import java.util.Map;
  */
 public final class OreBiomeCommand {
 
-    /** 搜索半径（方块）。和原版 /locate 用的一样大。 */
-    private static final int SEARCH_RADIUS = 6400;
-    /** 横向采样精度：越小越准、越慢。 */
-    private static final int HORIZONTAL_RESOLUTION = 32;
-    /** 纵向采样精度。 */
-    private static final int VERTICAL_RESOLUTION = 64;
+    /**
+     * {@code /orebiome} 的搜索半径（方块）。圆斑本来就按网格撒出来，这个范围
+     * 足够列出最近的几十片。片区是由遮罩直接算出来的，不需要一格格采样。
+     */
+    private static final int SEARCH_RADIUS = 20000;
 
     public static void register(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("orebiome")
@@ -70,27 +74,43 @@ public final class OreBiomeCommand {
                         }
                     }
                     OrePool pool = OrePool.forSettings(settings);
-                    List<String> lines = new ArrayList<>();
-                    lines.add("配置文件：" + OreBiomeSettings.file());
-                    lines.add("密度档位：" + settings.density
+                    List<Component> lines = new ArrayList<>();
+                    lines.add(Component.literal("配置文件：" + OreBiomeSettings.file()));
+                    lines.add(Component.literal("密度档位：" + settings.density
                             + "（地表往下 " + density.pick(6, 14, 26) + " 格、含矿率 "
-                            + density.pick(60, 160, 340) / 10 + "%）");
-                    lines.add("出生点保护：" + spawnGuardText(settings, context));
-                    lines.add("原版矿石：开 " + vanillaOn + " / " + OreBiomeSettings.VANILLA_ORES.size());
-                    lines.add("模组矿石清单：共 " + settings.modOres.size()
-                            + " 种，勾选 " + enabled.size() + " 种");
+                            + density.pick(60, 160, 340) / 10 + "%）"));
+                    lines.add(Component.literal("群系大小：" + biomeSizeText(settings)
+                            + "（改完要退出世界再进才生效）"));
+                    lines.add(Component.literal("出生点保护：" + spawnGuardText(settings, context)));
+                    lines.add(biomeLine(context));
+                    lines.add(Component.literal("原版矿石：开 " + vanillaOn + " / " + OreBiomeSettings.VANILLA_ORES.size()));
+                    lines.add(Component.literal("模组矿石清单：共 " + settings.modOres.size()
+                            + " 种，勾选 " + enabled.size() + " 种"));
                     for (int i = 0; i < Math.min(6, enabled.size()); i++) {
                         String key = enabled.get(i);
                         Block block = OrePool.blockOf(key);
-                        lines.add("  " + key + (block == null ? "   ← 这个方块已经不存在了" : ""));
+                        lines.add(Component.literal("  " + key
+                                + (block == null ? "   ← 这个方块已经不存在了" : "")));
                     }
                     if (enabled.size() > 6) {
-                        lines.add("  ……其余 " + (enabled.size() - 6) + " 种略");
+                        lines.add(Component.literal("  ……其余 " + (enabled.size() - 6) + " 种略"));
                     }
-                    lines.add("地表矿石层可用的矿种：" + pool.size()
-                            + (pool.isEmpty() ? "   ← 一种都没有，所以什么都不会生成" : ""));
-                    for (String line : lines) {
-                        context.getSource().sendSuccess(() -> Component.literal(line), false);
+                    lines.add(Component.literal("地表矿石层可用的矿种：" + pool.size()
+                            + (pool.isEmpty() ? "   ← 一种都没有，所以什么都不会生成" : "")));
+                    lines.add(Component.literal("注入计数：调用 " + OreBiomeDiagnostics.calls()
+                            + "，遮罩通过后替换 " + OreBiomeDiagnostics.replacedCount()));
+                    lines.add(Component.literal("拦截原因：出生点 " + OreBiomeDiagnostics.protectedAreaCount()
+                            + "，遮罩外 " + OreBiomeDiagnostics.maskRejectedCount()
+                            + "，非陆地 " + OreBiomeDiagnostics.nonLandCount()
+                            + "，句柄缺失 " + OreBiomeDiagnostics.holderMissingCount()));
+                    lines.add(Component.literal(OreBiomeDiagnostics.calls() == 0
+                            ? "诊断：还没有捕获到群系查询，请先走出出生点并再执行一次"
+                            : (OreBiomeDiagnostics.replacedCount() == 0
+                            ? "诊断：注入已运行，但当前还没有替换成功"
+                            : "诊断：注入正在替换群系")));
+                    lines.add(Component.literal("提示：已经生成过的老区块不会变，想看效果要去没走过的新区域"));
+                    for (Component line : lines) {
+                        context.getSource().sendSuccess(() -> line, false);
                     }
                     return 1;
                 }))
@@ -115,18 +135,12 @@ public final class OreBiomeCommand {
         if (level == null) {
             level = player.serverLevel();
         }
-        // 以玩家所在的 X/Z、海平面高度为起点搜索（群系搜索本身是三维的）。
-        BlockPos origin = new BlockPos(player.getBlockX(), 64, player.getBlockZ());
-        Pair<BlockPos, Holder<Biome>> found = level.findClosestBiome3d(
-                holder -> holder.is(ModBiomes.ORE_BIOME),
-                origin,
-                SEARCH_RADIUS, HORIZONTAL_RESOLUTION, VERTICAL_RESOLUTION);
-        if (found == null) {
+        BlockPos target = findNearestOreBiome(level, player.getBlockX(), player.getBlockZ());
+        if (target == null) {
             context.getSource().sendFailure(
                     Component.translatable("commands.orebiome.not_found", SEARCH_RADIUS));
             return 0;
         }
-        BlockPos target = found.getFirst();
         // 最近的矿石群系往往在几千格开外，那块地的区块根本没加载过。
         // 原版的高度图对「未加载」的区块会返回一个默认值（主世界就是基岩层 -64 附近），
         // 于是 /orebiome tp 每次都把人送到地底。这里先把目标区块加载出来，
@@ -159,6 +173,111 @@ public final class OreBiomeCommand {
         context.getSource().sendSuccess(
                 () -> Component.translatable("commands.orebiome.tp_hint"), false);
         return 1;
+    }
+
+    /**
+     * 找离玩家最近的、确实长着矿石群系的一片地。
+     *
+     * <p>先用片区遮罩的网格列出最近的几十个圆斑中心（读哈希，瞬间完成），
+     * 再逐个向群系源确认「这里真的会变成矿石群系」。圆斑中心若正好落在
+     * 海洋、河流或出生点保护圈里，那一格仍然是原版群系，就换斑内别的点、
+     * 再不行换下一片。全部确认过的点都在陆地上，传过去脚下就是矿石地带。</p>
+     */
+    private static BlockPos findNearestOreBiome(ServerLevel level, int blockX, int blockZ) {
+        List<BlockPos> candidates = OreBiomePatchMask.nearestPatchCenters(
+                blockX, blockZ, SEARCH_RADIUS, 64);
+        for (BlockPos candidate : candidates) {
+            BlockPos hit = probeCandidate(level, candidate);
+            if (hit != null) {
+                return hit;
+            }
+        }
+        return null;
+    }
+
+    /** 在候选圆斑的中心和周边几个点里，挑第一个确实是矿石群系的坐标。 */
+    private static BlockPos probeCandidate(ServerLevel level, BlockPos center) {
+        if (!SpawnGuard.withinProtectedRadius(center.getX(), center.getZ())
+                && isOreBiomeAt(level, center.getX(), center.getZ())) {
+            return center;
+        }
+        int offset = Math.max(8, (int) Math.round(
+                OreBiomeSettings.get().biomeSize().patchLatticeBlocks() * 0.32D));
+        int[][] offsets = {
+                {offset, 0}, {-offset, 0}, {0, offset}, {0, -offset},
+                {offset, offset}, {-offset, offset}, {offset, -offset}, {-offset, -offset}
+        };
+        for (int[] step : offsets) {
+            int x = center.getX() + step[0];
+            int z = center.getZ() + step[1];
+            if (SpawnGuard.withinProtectedRadius(x, z)) {
+                continue;
+            }
+            if (isOreBiomeAt(level, x, z)) {
+                return new BlockPos(x, 64, z);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 直接问群系源：这个坐标生成出来的是不是矿石群系。
+     * 不加载区块，只在气候采样层问一次，所以几千格开外也能瞬间判断。
+     */
+    private static boolean isOreBiomeAt(ServerLevel level, int blockX, int blockZ) {
+        try {
+            BiomeSource source = level.getChunkSource().getGenerator().getBiomeSource();
+            Climate.Sampler sampler = level.getChunkSource().randomState().sampler();
+            Holder<Biome> holder = source.getNoiseBiome(
+                    QuartPos.fromBlock(blockX),
+                    QuartPos.fromBlock(64),
+                    QuartPos.fromBlock(blockZ),
+                    sampler);
+            return holder != null && holder.is(ModBiomes.ORE_BIOME);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** 「你脚下的群系是什么、是不是矿石群系」这一行，直接回答「这儿为什么没矿」。 */
+    private static Component biomeLine(CommandContext<CommandSourceStack> context) {
+        Holder<Biome> here;
+        try {
+            ServerPlayer player = context.getSource().getPlayerOrException();
+            here = player.serverLevel().getBiome(player.blockPosition());
+        } catch (Exception ignored) {
+            // 服务端控制台执行时没有玩家，这一行就不带了
+            return Component.literal("你脚下的群系：控制台没有坐标，略过");
+        }
+        String id = here.unwrapKey().map(key -> key.location().toString()).orElse("未知");
+        Component name = here.unwrapKey()
+                .<Component>map(key -> Component.translatable(
+                        "biome." + key.location().getNamespace() + "." + key.location().getPath()))
+                .orElse(Component.literal("未知"));
+        boolean ore = SpawnGuard.isOreBiome(here);
+        return Component.literal("你脚下的群系：").append(name)
+                .append(Component.literal("（" + id + "）"))
+                .append(Component.literal(ore
+                        ? "  ← 就是矿石群系，这里一定有矿"
+                        : "  ← 不是矿石群系，所以这附近没有模组的矿"));
+    }
+
+    /** 群系大小档位的中文说法，显示实际片区直径。 */
+    private static String biomeSizeText(OreBiomeSettings settings) {
+        OreBiomeSettings.BiomeSize size = settings.biomeSize();
+        String label = switch (size) {
+            case SMALL -> "小";
+            case MEDIUM -> "中";
+            case LARGE -> "大";
+            case HUGE -> "超级";
+        };
+        int diameter = switch (size) {
+            case SMALL -> 160;
+            case MEDIUM -> 320;
+            case LARGE -> 640;
+            case HUGE -> 2560;
+        };
+        return label + "（片区直径约 " + diameter + " 格）";
     }
 
     private static String spawnGuardText(OreBiomeSettings settings,

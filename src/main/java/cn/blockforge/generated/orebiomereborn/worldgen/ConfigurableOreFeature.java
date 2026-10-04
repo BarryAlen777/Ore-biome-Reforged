@@ -56,10 +56,10 @@ public class ConfigurableOreFeature extends OreFeature {
     public boolean place(FeaturePlaceContext<OreConfiguration> ctx) {
         OreConfiguration config = ctx.config();
         String ore = oreKey(config);
-        // 出生点保护：半径以内的区块一条矿都不放
-        if (SpawnGuard.tooCloseToSpawn(ctx.level(), ctx.origin())) {
-            return false;
-        }
+        // 出生点保护不在这里拦：保护圈是靠「圈内不长矿石群系」实现的。
+        // 以前这里会直接 return false，结果是「群系露出来了却没有一粒矿」——
+        // 地表一层泥、地下纯石头，正是玩家截图里那种情况。现在只要这片地是
+        // 矿石群系，矿物就照常生成。
         OreBiomeSettings settings = OreBiomeSettings.get();
         // 关掉的矿石一条都不放（表里没有的矿物默认放行）
         if (ore != null && !settings.isVanillaOreEnabled(ore)) {

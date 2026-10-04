@@ -5,8 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "ore_biome_reforged.refmap.json",
   "mixins": [
-    "MultiNoiseBiomeSourceMixin",
-    "OverworldBiomeBuilderMixin"
+    "MultiNoiseBiomeSourceMixin"
   ],
   "injectors": {
     "defaultRequire": 1

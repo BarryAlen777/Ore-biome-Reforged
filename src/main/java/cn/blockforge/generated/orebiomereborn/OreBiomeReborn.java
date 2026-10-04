@@ -21,10 +21,10 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
  * 这个群系就长在普通主世界里，像沙漠、平原一样是主世界群系中的一种。</p>
  *
  * <p>1.20.1 的群系、矿脉（ConfiguredFeature / PlacedFeature）全是数据包注册表，
- * 内容写在 {@code data/ore_biome_reforged/} 下的 JSON 里。而「主世界要用哪些
- * 群系」这张表在原版里是写死在 {@code OverworldBiomeBuilder} 里的，数据包改不了，
- * 所以由 {@code mixin/OverworldBiomeBuilderMixin} 把矿石群系插进主世界群系表。
- * 这个入口类只负责挂上 {@code /orebiome} 命令。</p>
+ * 内容写在 {@code data/ore_biome_reforged/} 下的 JSON 里。而「这块地是什么群系」
+ * 由 {@code mixin/MultiNoiseBiomeSourceMixin} 在原版查完气候表之后按坐标当场改名：
+ * 圆斑遮罩内、出生点保护圈外的普通陆地一律换成矿石群系，片区大小只由遮罩决定
+ * （细节见该类的注释）。这个入口类只负责挂上 {@code /orebiome} 命令。</p>
  */
 @Mod(OreBiomeReborn.MOD_ID)
 public final class OreBiomeReborn {
@@ -40,6 +40,11 @@ public final class OreBiomeReborn {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModFeatures.FEATURES.register(modBus);
 
+        // 启动时先把 config 文件读进来。片区遮罩每次判定都直接读内存里的当前配置，
+        // 所以不能等到开服事件才读；前面这一步保证从主菜单
+        // 打开配置界面时看到的就是盘上那份，而不是默认值。
+        OreBiomeSettings.reload();
+
         // forge 总线：/orebiome 命令（默认只报最近的矿石群系坐标）
         MinecraftForge.EVENT_BUS.addListener(OreBiomeCommand::register);
         // 开服时从盘上重读一次配置（专用服务器直接改 config 文件也能生效）
@@ -48,6 +53,10 @@ public final class OreBiomeReborn {
         // 那里拿不到服务器实例，所以在主世界加载时先记一份、卸载时清掉。
         MinecraftForge.EVENT_BUS.addListener(SpawnGuard::onLevelLoad);
         MinecraftForge.EVENT_BUS.addListener(SpawnGuard::onLevelUnload);
+        // 数据包注册表刚就绪时就把矿石群系句柄缓存好：群系源第一次被问
+        // 「你有哪些群系」发生在世界加载的最早期，那时还拿不到主世界实例。
+        MinecraftForge.EVENT_BUS.addListener(SpawnGuard::onServerAboutToStart);
+        MinecraftForge.EVENT_BUS.addListener(SpawnGuard::onServerStopping);
         // 客户端：在模组列表（Mods）里注册「配置」按钮，打开 OreConfigScreen
         // 这个独立界面；创建世界界面和 Esc 游戏菜单左上角的入口在 OreBiomeClient 里挂
         if (FMLEnvironment.dist == Dist.CLIENT) {

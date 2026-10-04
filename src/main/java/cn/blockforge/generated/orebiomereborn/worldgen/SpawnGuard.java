@@ -4,25 +4,28 @@ import cn.blockforge.generated.orebiomereborn.config.OreBiomeSettings;
 import cn.blockforge.generated.orebiomereborn.registry.ModBiomes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 /**
  * 出生点保护：世界生成时判断「这个地方离出生点够不够远」。
  *
- * <p>保护圈挡住两样东西，缺一样玩家就会看到怪东西：</p>
+ * <p>保护圈只做一件事：<b>让矿石群系本身不出现在圈里</b>。圈内该长平原就长平原、
+ * 该长恶地就长恶地，跟原版一模一样，自然也就没有矿石。圈外才轮到矿石群系登场。</p>
  *
- * <ol>
- *   <li><b>群系本身</b>：{@link cn.blockforge.generated.orebiomereborn.mixin.MultiNoiseBiomeSourceMixin}
- *       在原版挑完群系之后再看一眼——如果挑中的是矿石群系、而且离出生点太近，
- *       就换成原版本来该给的那个群系。这样保护圈里是正常的草地、沙漠、恶地，
- *       而不是一大片没有矿的秃石头。</li>
- *   <li><b>矿脉等特性</b>：{@link #tooCloseToSpawn} 是第二道保险，就算因为
- *       区块边界、群系取样精度之类的原因漏进来一格，矿也一条不放。</li>
- * </ol>
+ * <p>为什么不在矿脉特性里另加一道拦截：以前那样做过，结果很糟——群系因为区块边界、
+ * 群系取样精度之类的原因照样露出来，可圈里的矿脉、地表矿石层却被拦光了，玩家看到
+ * 的就是「一块贴着矿石群系名字、地表全是泥土、挖下去连一粒矿都没有」的死地
+ * （见 {@link cn.blockforge.generated.orebiomereborn.worldgen.ConfigurableOreFeature}）。
+ * 所以现在判断只保留群系这一层：要么整片地都是矿石群系、矿管够，要么整片地
+ * 都不是、一颗都没有，不会出现半吊子状态。</p>
  *
  * <p>出生点从 {@link ServerLevel#getSharedSpawnPos()} 拿。世界生成跑在工作线程上，
  * 这里只读一个 volatile 引用加一次字段读取，不加锁。有一个已知的无害边界：
@@ -42,6 +45,8 @@ public final class SpawnGuard {
         if (event.getLevel() instanceof ServerLevel server
                 && Level.OVERWORLD.equals(server.dimension())) {
             overworld = server;
+            cachedOreHolder = lookupOreHolder(server.getServer());
+            OreBiomeDiagnostics.reset();
         }
     }
 
@@ -54,8 +59,30 @@ public final class SpawnGuard {
 
     /** 当前世界的出生点；世界还没加载好时按 (0,0) 算。 */
     public static BlockPos spawnPos() {
-        ServerLevel level = overworld;
+        ServerLevel level = currentOverworld();
         return level == null ? BlockPos.ZERO : level.getSharedSpawnPos();
+    }
+
+    /**
+     * 当前世界的种子，给片区遮罩用：同一个坐标在别的世界不该长出同样的矿石片区。
+     * 世界还没加载时按 0 算（客户端主菜单之类，本来也不会去生成地形）。
+     */
+    public static long worldSeed() {
+        ServerLevel level = currentOverworld();
+        return level == null ? 0L : level.getSeed();
+    }
+
+    /**
+     * 事件还没把世界写入缓存时，从 Forge 当前服务器再取一次；避免新世界最初生成阶段
+     * 因为时序差异拿不到种子和动态群系注册表。
+     */
+    private static ServerLevel currentOverworld() {
+        ServerLevel level = overworld;
+        if (level != null) {
+            return level;
+        }
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        return server == null ? null : server.getLevel(Level.OVERWORLD);
     }
 
     /**
@@ -82,21 +109,55 @@ public final class SpawnGuard {
     }
 
     /**
-     * 这个区块（以 origin 所在区块的中心判断）是否离出生点太近、不该生成矿。
+     * 矿石群系的注册表句柄，供群系改名注入直接取用。
      *
-     * @param level  世界生成上下文
-     * @param origin 特性拿到的坐标（可能被 in_square 挪过，所以先归回区块角）
+     * <p>这一版起矿石群系不再靠气候表「赢」出来，而是遮罩通过后当场换成它的
+     * Holder，所以要从注册表里把句柄取出来。世界还没加载好、或数据包里没找到
+     * 这个群系时返回 null，调用方按「维持原版」处理，不会炸。</p>
+     *
+     * <p>句柄在 {@link ServerAboutToStartEvent}（服务器的数据包注册表刚就绪、
+     * 世界还没开始建）就先缓存一份。原因是群系源第一次被问「你有哪些群系」
+     * 发生在很早期的世界加载阶段，那时候 {@code getLevel} 之类的查询还拿不到
+     * 主世界实例，如果那时返回 null，矿石群系就永远进不了候选表。</p>
      */
-    public static boolean tooCloseToSpawn(WorldGenLevel level, BlockPos origin) {
-        int minDistance = OreBiomeSettings.get().spawnDistance();
-        if (minDistance <= 0) {
-            return false; // 不保护
+    private static volatile Holder<Biome> cachedOreHolder;
+
+    /** 服务器数据包注册表就绪时缓存矿石群系句柄。 */
+    public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+        cachedOreHolder = lookupOreHolder(event.getServer());
+    }
+
+    /** 退出存档时清掉缓存，避免握着上一个服务器的注册表。 */
+    public static void onServerStopping(ServerStoppingEvent event) {
+        cachedOreHolder = null;
+    }
+
+    public static Holder<Biome> oreBiomeHolder() {
+        Holder<Biome> cached = cachedOreHolder;
+        if (cached != null) {
+            return cached;
         }
-        Level world = level.getLevel();
-        BlockPos spawn = world instanceof ServerLevel server ? server.getSharedSpawnPos() : BlockPos.ZERO;
-        // 按区块中心算水平距离，用平方比较省一次开方
-        long dx = (origin.getX() & ~15) + 8L - spawn.getX();
-        long dz = (origin.getZ() & ~15) + 8L - spawn.getZ();
-        return dx * dx + dz * dz < (long) minDistance * minDistance;
+        ServerLevel level = currentOverworld();
+        MinecraftServer server = level != null
+                ? level.getServer()
+                : ServerLifecycleHooks.getCurrentServer();
+        Holder<Biome> found = lookupOreHolder(server);
+        if (found != null) {
+            cachedOreHolder = found;
+        }
+        return found;
+    }
+
+    /** 从服务器的群系注册表里按键取句柄；任何异常都当作「暂时拿不到」。 */
+    private static Holder<Biome> lookupOreHolder(MinecraftServer server) {
+        if (server == null) {
+            return null;
+        }
+        try {
+            return server.registryAccess().registryOrThrow(Registries.BIOME)
+                    .getHolder(ModBiomes.ORE_BIOME).orElse(null);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 }
