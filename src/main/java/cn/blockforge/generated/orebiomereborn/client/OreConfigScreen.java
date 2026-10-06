@@ -259,7 +259,7 @@ public class OreConfigScreen extends Screen {
             int noteY = listTop + 4 * ROW_HEIGHT + 16;
             drawTitle(graphics, "矿石片区只出现在陆地：海洋、河流、沙滩、恶地都不会有",
                     contentX + 2, noteY, 0xFFE5D9D0);
-            drawTitle(graphics, "小 ≈ 一片直径约 160 格；中 ≈ 320 格；大 ≈ 640 格；超级 ≈ 2560 格",
+            drawTitle(graphics, "小 ≈ 一片直径约 160 格；中 ≈ 320 格；大 ≈ 640 格；超大 ≈ 连成一片",
                     contentX + 2, noteY + 12, 0xFFE5D9D0);
             drawTitle(graphics, "片区外会自然回到原版群系；改完要退出世界再进，旧区块不会变化",
                     contentX + 2, noteY + 24, 0xFFFFD080);
@@ -463,7 +463,7 @@ public class OreConfigScreen extends Screen {
                     Items.COBBLESTONE));
             rows.add(biomeSizeRow("large", "大群系：一片直径约 640 格，能逛一会儿",
                     Items.COBBLED_DEEPSLATE));
-            rows.add(biomeSizeRow("huge", "超级群系：一片直径约 2560 格，慎选",
+            rows.add(biomeSizeRow("huge", "超大群系：矿石铺满整片地面，一眼望不到边",
                     Items.OBSIDIAN));
         }
         return rows;

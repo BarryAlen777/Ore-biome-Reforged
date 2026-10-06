@@ -106,7 +106,8 @@
       "minecraft:lake_lava_surface"
     ],
     [
-      "minecraft:amethyst_geode"
+      "minecraft:amethyst_geode",
+      "ore_biome_reforged:dense_ore_layer"
     ],
     [
       "minecraft:monster_room",
@@ -131,8 +132,7 @@
       "ore_biome_reforged:diamond_surface",
       "ore_biome_reforged:emerald",
       "ore_biome_reforged:emerald_surface",
-      "ore_biome_reforged:mod_ores",
-    "ore_biome_reforged:dense_ore_layer"
+      "ore_biome_reforged:mod_ores"
     ],
     [],
     [

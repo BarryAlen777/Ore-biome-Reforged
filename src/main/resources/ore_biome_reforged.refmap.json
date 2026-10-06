@@ -1,23 +1,31 @@
 {
   "mappings": {
     "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
-      "getNoiseBiome": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
-      "getNoiseBiome(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
       "collectPossibleBiomes": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
-      "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
-      "parameters": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;",
-      "parameters()Lnet/minecraft/world/level/biome/Climate$ParameterList;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;"
+      "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;"
+    },
+    "cn/blockforge/generated/orebiomereborn/mixin/NoiseBasedChunkGeneratorMixin": {
+      "createBiomes": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+      "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+    },
+    "cn/blockforge/generated/orebiomereborn/mixin/ChunkGeneratorMixin": {
+      "createBiomes": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+      "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
     }
   },
   "data": {
     "searge": {
       "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
-        "getNoiseBiome": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
-        "getNoiseBiome(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_203407_(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;",
         "collectPossibleBiomes": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
-        "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
-        "parameters": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;",
-        "parameters()Lnet/minecraft/world/level/biome/Climate$ParameterList;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274409_()Lnet/minecraft/world/level/biome/Climate$ParameterList;"
+        "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;"
+      },
+      "cn/blockforge/generated/orebiomereborn/mixin/NoiseBasedChunkGeneratorMixin": {
+        "createBiomes": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+        "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+      },
+      "cn/blockforge/generated/orebiomereborn/mixin/ChunkGeneratorMixin": {
+        "createBiomes": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+        "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
       }
     }
   }

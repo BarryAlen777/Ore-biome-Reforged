@@ -9,10 +9,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
+
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 出生点保护：世界生成时判断「这个地方离出生点够不够远」。
@@ -37,6 +41,16 @@ public final class SpawnGuard {
     /** 主世界的服务端实例，用来随时读到最新的出生点（/setworldspawn 改了也能跟上）。 */
     private static volatile ServerLevel overworld;
 
+    /**
+     * 主世界当前那个区块生成器。
+     *
+     * <p>下界、末地用的也是同一个 {@code NoiseBasedChunkGenerator} 类，光看类型分不出维度。
+     * 区块生成跑在工作线程上、拿不到「当前是哪个维度」，所以在主世界加载时把它的生成器实例
+     * 记下来；重写群系时按「这个生成器是不是记下来的那个」放行，下界/末地就不会被误改。
+     * 只存实例引用（{@code ConcurrentHashMap} 的键就是引用相等），退出世界时清掉。</p>
+     */
+    private static final Set<ChunkGenerator> OVERWORLD_GENERATORS = ConcurrentHashMap.newKeySet();
+
     private SpawnGuard() {
     }
 
@@ -46,6 +60,10 @@ public final class SpawnGuard {
                 && Level.OVERWORLD.equals(server.dimension())) {
             overworld = server;
             cachedOreHolder = lookupOreHolder(server.getServer());
+            ChunkGenerator generator = server.getChunkSource().getGenerator();
+            if (generator != null) {
+                OVERWORLD_GENERATORS.add(generator);
+            }
             OreBiomeDiagnostics.reset();
         }
     }
@@ -54,7 +72,18 @@ public final class SpawnGuard {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() == overworld) {
             overworld = null;
+            OVERWORLD_GENERATORS.clear();
         }
+    }
+
+    /**
+     * 这个区块生成器是不是主世界的那个。
+     *
+     * <p>返回 false 时不要重写群系：下界和末地的生成器在同一个类里，认错就会把圆斑
+     * 按同样的坐标长到那些维度去。</p>
+     */
+    public static boolean isOverworldGenerator(ChunkGenerator generator) {
+        return generator != null && OVERWORLD_GENERATORS.contains(generator);
     }
 
     /** 当前世界的出生点；世界还没加载好时按 (0,0) 算。 */
@@ -130,6 +159,7 @@ public final class SpawnGuard {
     /** 退出存档时清掉缓存，避免握着上一个服务器的注册表。 */
     public static void onServerStopping(ServerStoppingEvent event) {
         cachedOreHolder = null;
+        OVERWORLD_GENERATORS.clear();
     }
 
     public static Holder<Biome> oreBiomeHolder() {

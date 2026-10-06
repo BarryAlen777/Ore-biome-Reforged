@@ -39,11 +39,17 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  *       不会再被区块网格切成直边。</li>
  * </ul>
  *
- * <p><b>二是群系边缘做了过渡。</b>原版给群系接壤处做了一种「抖动」（surface 规则按
- * biome 判定时会按距离在几个邻居之间随机挑），所以边界本来就会一半石头一半草。
- * 这里顺着它做：离边缘越近，「换石头的概率」和「含矿率」都按一个系数往下降，
- * 一直到边界外变成没矿的普通地形，而不是一刀切。过渡带宽度约
- * {@code CELL * BLEND_CELLS} = 12 格。</p>
+ * <p><b>二是矿石群系里不留草皮。</b>离边缘越近，含矿率按一个系数往下降（边缘石头多、
+ * 矿石少），但泥土和草方块<b>一律</b>换成石头。早先这里还让一部分草皮按概率留下来，
+ * 想做出「边界慢慢过渡」，结果边界那一圈会成片留下草和泥土：玩家在石头矿山中间看到
+ * 一块突兀的绿地，看着就像 bug。群系边界本来由圆斑遮罩的噪声起伏决定，是自然曲线，
+ * 不需要再靠留草皮来过渡。</p>
+ *
+ * <p><b>三是本特性故意放在装饰阶段的早期（{@code features} 数组第 2 步）。</b>
+ * 原版顺序是「先放该步的结构、再放该步的特征」，所以放在早期意味着之后的结构
+ * （冰火传说的龙巢、各种地牢）会把方块盖在矿石层上面，巢穴和建筑保持完整；
+ * 如果放在第 6 步（矿脉那一步），这些结构的位置会被整片矿石吃掉，看起来就是
+ * 「龙巢被矿石群系挤掉了」。</p>
  *
  * <p>最后还做了一件小事：多噪音气候抖动偶尔会在群系内部戳出一个很小的洞（一块
  * 隔壁群系），这种洞四周都被矿石群系包着，看着就是石头山里突兀的一块草。采样网格里
@@ -144,9 +150,12 @@ public class DenseOreLayerFeature extends Feature<NoneFeatureConfiguration> {
                     // 越靠群系边缘，含矿率越低；到边上就是 0
                     rate = rate * blend / 1000;
                     if (random.nextInt(1000) >= rate) {
-                        // 没被选成矿石的泥土 / 草皮：内部一律换成石头；边缘按
-                        // 同一个系数抖动着换一部分，剩下的留草皮，接壤处才自然。
-                        if (soil && random.nextInt(1000) < blend) {
+                        // 没被选成矿石的泥土 / 草皮：一律换成石头，矿石群系里不留草皮。
+                        // 早先这里按 blend 概率只换一部分，想做出「边界逐渐过渡」，
+                        // 结果边界那圈会成片留下草和泥土，看着就是石头矿山里突兀的绿地。
+                        // 群系边界本身已经由圆斑遮罩的噪声起伏决定，是自然曲线，
+                        // 边缘的过渡交给上面的含矿率（rate × blend）就够了。
+                        if (soil) {
                             setBlock(level, cursor.immutable(), Blocks.STONE.defaultBlockState());
                             placed = true;
                         }
@@ -207,14 +216,25 @@ public class DenseOreLayerFeature extends Feature<NoneFeatureConfiguration> {
             int sizeZ = qz1 - qz0 + 1;
 
             boolean[] ore = new boolean[sizeX * sizeZ];
-            BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+            // 采样用的 y 层：高度图给的是地表上方那一格，正常情况下落在世界内，
+            // 但地形顶到建筑上限时会指到世界外，越界查群系会炸。夹回合法 quart 层。
+            int minQy = level.getMinBuildHeight() >> 2;
+            int maxQy = (level.getMaxBuildHeight() - 1) >> 2;
             for (int ix = 0; ix < sizeX; ix++) {
+                int qx = qx0 + ix;
                 for (int iz = 0; iz < sizeZ; iz++) {
-                    int blockX = QuartPos.toBlock(qx0 + ix);
-                    int blockZ = QuartPos.toBlock(qz0 + iz);
-                    int blockY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, blockX, blockZ);
-                    pos.set(blockX, blockY, blockZ);
-                    ore[ix * sizeZ + iz] = SpawnGuard.isOreBiome(level.getBiome(pos));
+                    int qz = qz0 + iz;
+                    int blockY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG,
+                            QuartPos.toBlock(qx), QuartPos.toBlock(qz));
+                    int qy = Math.max(minQy, Math.min(maxQy, QuartPos.fromBlock(blockY)));
+                    // 直接读区块自己的群系格（quart），不要用 level.getBiome：
+                    // 后者会经过 BiomeManager，把周围 8 个群系格按距离做一次模糊平均，
+                    // 于是遮罩刚换过的那一格在边界上可能仍旧被判成「隔壁的普通群系」，
+                    // 整列就被跳过、原地留下草皮——正是玩家截图里那种突兀的泥土。
+                    // level.getNoiseBiome 是 LevelReader 的默认实现，优先读本区块已填好的
+                    // 群系容器，和 OreBiomeChunkPatcher 改的是同一份数据，判定完全一致。
+                    ore[ix * sizeZ + iz] = SpawnGuard.isOreBiome(
+                            level.getNoiseBiome(qx, qy, qz));
                 }
             }
             boolean[] effective = ore.clone();

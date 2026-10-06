@@ -26,33 +26,47 @@ public final class OreBiomeSettings {
             List.of("coal", "iron", "copper", "gold", "redstone", "lapis", "diamond", "emerald");
 
     /**
-     * 群系大小四档。每档两个数字，都喂给 {@link cn.blockforge.generated.orebiomereborn.worldgen.OreBiomePatchMask}：
-     * 「格距」是撒圆斑用的格子边长，「出斑率」是每个格子里真放一片的概率。
-     * 片区就是一块圆斑，直径直接由格距决定（模拟脚本量出的中位直径 ≈ 标称值）。
+     * 群系大小四档。每档四个数字，都喂给 {@link cn.blockforge.generated.orebiomereborn.worldgen.OreBiomePatchMask}：
+     * 「格距」是撒圆斑用的格子边长，「出斑率」是每个格子里真放一片的概率，
+     * 「半径区间」是圆斑半径相对格距的取值范围。
+     * 片区就是一块圆斑，直径直接由半径决定（模拟脚本量出的中位直径 ≈ 标称值）。
      * 从这一版起圆斑遮罩是片区大小的唯一决定者——矿石群系不再登记进原版气候表
      * （气候表按最近邻选群系，会把片区切成碎块），改由注入在斑内当场换群系，
-     * 所以界面里写 160 / 320 / 640 / 2560 格，游戏里就是这么大一片。
+     * 所以界面里写多大，游戏里就是多大一片。
      *
-     * <p>四档覆盖率都约 12%，区别只在一片有多大、隔多远出现一片。</p>
+     * <p>小/中/大三档维持原样：一片一片地撒，出斑率 0.22，覆盖率约 13%，
+     * 区别只在一片有多大、隔多远出现一片。</p>
+     *
+     * <p><b>超大档这一版改了脾气。</b>以前它只是「把一片做得很大」，出斑率和其它档
+     * 一样是 0.22，于是 2944 格的网格里只有约 13% 的地方是矿石群系——玩家站在一片
+     * 矿石大陆上，抬眼就能看见几千格宽的普通地形，看着像「矿区中间塌了一块」。
+     * 现在超大档每个格子都放斑、半径也放大到 0.75～0.90 个格距，圆斑之间互相重叠，
+     * 覆盖率接近 100%，只剩零星几百格的小块别的群系（模拟脚本 {@code sim_mask.py}
+     * 量出来的）。它认的就是「一整片望不到边的矿石大陆」。</p>
      */
     public enum BiomeSize {
         /** 小：一片直径约 160 格，隔两三百格就有一片，最好找矿。 */
-        SMALL("small", 184, 0.22D),
+        SMALL("small", 184, 0.22D, 0.40D, 0.53D),
         /** 中：一片直径约 320 格，默认档位。 */
-        MEDIUM("medium", 368, 0.22D),
+        MEDIUM("medium", 368, 0.22D, 0.40D, 0.53D),
         /** 大：一片直径约 640 格，能逛一会儿。 */
-        LARGE("large", 736, 0.22D),
-        /** 超级：一片直径约 2560 格，一整眼望不到边的矿石大陆（在 1280 的基础上再翻倍）。 */
-        HUGE("huge", 2944, 0.22D);
+        LARGE("large", 736, 0.22D, 0.40D, 0.53D),
+        /** 超大：圆斑互相重叠连成一片，矿石群系几乎铺满整片地面。 */
+        HUGE("huge", 2944, 1.0D, 0.75D, 0.90D);
 
         private final String key;
         private final int patchLatticeBlocks;
         private final double patchProbability;
+        private final double patchRadiusMin;
+        private final double patchRadiusMax;
 
-        BiomeSize(String key, int patchLatticeBlocks, double patchProbability) {
+        BiomeSize(String key, int patchLatticeBlocks, double patchProbability,
+                  double patchRadiusMin, double patchRadiusMax) {
             this.key = key;
             this.patchLatticeBlocks = patchLatticeBlocks;
             this.patchProbability = patchProbability;
+            this.patchRadiusMin = patchRadiusMin;
+            this.patchRadiusMax = patchRadiusMax;
         }
 
         /** 存盘 / 配置界面用的字符串。 */
@@ -60,7 +74,7 @@ public final class OreBiomeSettings {
             return key;
         }
 
-        /** 遮罩格子的边长（格），圆斑直径约为它的 0.8～1.06 倍。 */
+        /** 遮罩格子的边长（格）。 */
         public int patchLatticeBlocks() {
             return patchLatticeBlocks;
         }
@@ -68,6 +82,16 @@ public final class OreBiomeSettings {
         /** 每个格子里放一片矿石圆斑的概率。 */
         public double patchProbability() {
             return patchProbability;
+        }
+
+        /** 圆斑半径的下限，单位是格距的倍数。 */
+        public double patchRadiusMin() {
+            return patchRadiusMin;
+        }
+
+        /** 圆斑半径的上限，单位是格距的倍数。 */
+        public double patchRadiusMax() {
+            return patchRadiusMax;
         }
 
         public static BiomeSize from(String name) {

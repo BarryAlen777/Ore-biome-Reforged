@@ -4,6 +4,6 @@
   "commands.orebiome.found": "最近的矿石生态群系在 X=%s, Y=%s, Z=%s（离你约 %s 格）",
   "commands.orebiome.tp_hint": "想直接过去就输入 /orebiome tp",
   "commands.orebiome.success": "已传送到最近的矿石生态群系（X=%s, Z=%s）",
-  "commands.orebiome.not_found": "附近 %s 格内没找到矿石生态群系，换个方向再试试",
+  "commands.orebiome.not_found": "附近 %s 格内没有能生成矿石群系的陆地（周围可能全是海洋，或都在出生点保护圈里）",
   "commands.orebiome.reloaded": "已从配置文件重新读取矿石群系设置"
 }

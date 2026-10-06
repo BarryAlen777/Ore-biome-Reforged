@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "ore_biome_reforged.refmap.json",
   "mixins": [
-    "MultiNoiseBiomeSourceMixin"
+    "MultiNoiseBiomeSourceMixin",
+    "NoiseBasedChunkGeneratorMixin",
+    "ChunkGeneratorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

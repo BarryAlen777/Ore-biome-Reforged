@@ -11,15 +11,15 @@ import java.util.List;
  * 给矿石群系增加一层只影响水平面的片区遮罩（圆斑方案）。
  *
  * <p>做法：按档位格距 L 铺一张隐形网格，每个格子用坐标 + 世界种子哈希出
- * 「放不放一片」（出斑率 p ≈ 0.22）、斑心在格内的抖动、斑的半径
- * r ∈ [0.40, 0.53]·L。落在任何一片圆斑里的坐标就保留矿石群系，斑外由
- * {@link cn.blockforge.generated.orebiomereborn.mixin.MultiNoiseBiomeSourceMixin}
- * 维持原版群系。半径再叠两层低频平滑噪声做起伏，边界不是死板的正圆。</p>
+ * 「放不放一片」（出斑率见 {@link OreBiomeSettings.BiomeSize}）、斑心在格内的抖动、
+ * 斑的半径 r ∈ [patchRadiusMin, patchRadiusMax]·L。落在任何一片圆斑里的坐标就保留
+ * 矿石群系，斑外维持原版群系。半径再叠两层低频平滑噪声做起伏，边界不是死板的正圆。</p>
  *
  * <p>为什么它是片区大小的唯一决定者：从这一版起，矿石群系不再登记进原版
  * 气候表参与「最近邻」竞争（那会把片区切成气候噪声尺度的碎块，档位形同虚设），
- * 而是由注入在遮罩通过后当场改名。所以直径就是半径 ×2，参数和观感一一对应
- * （184/368/736/2944 的格距对应中位直径 ≈ 160/320/640/2560 格，模拟脚本量出来的）；
+ * 而是由注入在遮罩通过后当场改名。所以直径就是半径 ×2，参数和观感一一对应；
+ * 小/中/大三档的出斑率都是 0.22，覆盖率约 13%，超大档则是每格都放斑、半径也放大，
+ * 圆斑互相重叠，几乎铺满整片地面（模拟脚本 {@code sim_mask.py} 量出来的）。
  * 海洋、河流、沙滩、恶地则由注入里的原版群系标签检查单独排除。</p>
  */
 public final class OreBiomePatchMask {
@@ -56,7 +56,8 @@ public final class OreBiomePatchMask {
         int cellX = (int) Math.floor(x / lattice);
         int cellZ = (int) Math.floor(z / lattice);
 
-        // 圆斑最大直径 1.06·L，加上抖动和起伏也只可能盖住周围 3×3 的格子。
+        // 半径最大 0.74·L，乘上起伏上限 1.25 再算上斑心抖动，最远也伸不过 1.2 个格距，
+        // 所以检查周围 3×3 的格子就够。
         for (int dz = -1; dz <= 1; dz++) {
             for (int dx = -1; dx <= 1; dx++) {
                 int ci = cellX + dx;
@@ -70,7 +71,8 @@ public final class OreBiomePatchMask {
                 double radiusHash = hash(ci, cj, seed ^ SALT_RADIUS);
                 double centerX = (ci + 0.5D + (jitterX - 0.5D) * 0.55D) * lattice;
                 double centerZ = (cj + 0.5D + (jitterZ - 0.5D) * 0.55D) * lattice;
-                double radius = (0.40D + 0.13D * radiusHash) * lattice;
+                double radius = (size.patchRadiusMin()
+                        + (size.patchRadiusMax() - size.patchRadiusMin()) * radiusHash) * lattice;
 
                 double vecX = x - centerX;
                 double vecZ = z - centerZ;
