@@ -1,10 +1,8 @@
 package cn.blockforge.generated.orebiomereborn.command;
 
-import cn.blockforge.generated.orebiomereborn.OreBiomeReborn;
 import cn.blockforge.generated.orebiomereborn.config.OreBiomeSettings;
 import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomeDiagnostics;
-import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomeLandFilter;
-import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomePatchMask;
+import cn.blockforge.generated.orebiomereborn.worldgen.OreBiomeLocator;
 import cn.blockforge.generated.orebiomereborn.worldgen.OrePool;
 import cn.blockforge.generated.orebiomereborn.worldgen.SpawnGuard;
 import com.mojang.brigadier.context.CommandContext;
@@ -13,20 +11,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.QuartPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.fml.ModList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +41,8 @@ public final class OreBiomeCommand {
 
     /**
      * {@code /orebiome} 的搜索半径（方块）。圆斑本来就按网格撒出来，这个范围
-     * 足够列出最近的几十片。片区是由遮罩直接算出来的，不需要一格格采样。
+     * 足够列出最近的十几片（现在平均一万格才有一片）。片区是由遮罩直接算出来的，
+     * 不需要一格格采样，更不会为了拿地表高度去加载几万格外的区块。
      */
     private static final int SEARCH_RADIUS = 20000;
 
@@ -80,8 +72,6 @@ public final class OreBiomeCommand {
                     }
                     OrePool pool = OrePool.forSettings(settings);
                     List<Component> lines = new ArrayList<>();
-                    lines.add(Component.literal("模组版本：" + modVersion()
-                            + "（更新后请确认这里显示的是新版本，否则说明 mods 文件夹里还是旧 jar）"));
                     lines.add(Component.literal("配置文件：" + OreBiomeSettings.file()));
                     lines.add(Component.literal("密度档位：" + settings.density
                             + "（地表往下 " + density.pick(6, 14, 26) + " 格、含矿率 "
@@ -145,7 +135,8 @@ public final class OreBiomeCommand {
         if (level == null) {
             level = player.serverLevel();
         }
-        BlockPos target = findNearestOreBiome(level, player.getBlockX(), player.getBlockZ());
+        BlockPos target = OreBiomeLocator.findNearest(level, player.getBlockX(), player.getBlockZ(),
+                SEARCH_RADIUS, MAX_CANDIDATES, true);
         // 只要世界里生成过区块，区块生成钩子就会点亮这个标记；没点亮说明钩子整条没生效。
         // 这是判断「功能到底有没有装进去」的铁证，和这次搜索走的路径无关。
         boolean injected = OreBiomeDiagnostics.injectionAlive();
@@ -155,15 +146,9 @@ public final class OreBiomeCommand {
             sendHealth(context, injected);
             return 0;
         }
-        // 最近的矿石群系往往在几千格开外，那块地的区块根本没加载过。
-        // 原版的高度图对「未加载」的区块会返回一个默认值（主世界就是基岩层 -64 附近），
-        // 于是 /orebiome tp 每次都把人送到地底。这里先把目标区块加载出来，
-        // 读到的才是真正的地面高度，传送才会落在草地上。
-        LevelChunk chunk = level.getChunk(
-                SectionPos.blockToSectionCoord(target.getX()),
-                SectionPos.blockToSectionCoord(target.getZ()));
-        int surfaceY = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                target.getX() & 15, target.getZ() & 15) + 1;
+        // 地表高度直接问区块生成器的噪声列，不加载区块：早先这里对几万格外的坐标调用
+        // getChunk，等于命令一敲下去就让服务端现生成一片全新地形，能卡住一两分钟。
+        int surfaceY = OreBiomeLocator.surfaceY(level, target.getX(), target.getZ());
         BlockPos surface = new BlockPos(target.getX(), surfaceY, target.getZ());
         double dx = surface.getX() - player.getX();
         double dz = surface.getZ() - player.getZ();
@@ -188,100 +173,6 @@ public final class OreBiomeCommand {
                 () -> Component.translatable("commands.orebiome.tp_hint"), false);
         sendHealth(context, injected);
         return 1;
-    }
-
-    /**
-     * 找离玩家最近的、确实长着矿石群系的一片地。
-     *
-     * <p>片区本来就是圆斑网格撒出来的，所以这里直接读网格列出最近的几百个圆斑中心
-     * （纯哈希，瞬间完成），再逐个确认「这里真的是陆地」。<b>不再要求群系源必须
-     * 已经返回矿石群系这个 Holder</b>——早期版本那样写，一旦注入被整合包里的优化
-     * 模组顶掉，命令就会把所有候选判成「不是矿石群系」，于是站在矿正中间也报
-     * 「20000 格内找不到」。现在地面判定和世界生成共用 {@link OreBiomeLandFilter}
-     * 同一套规则，命令报出的坐标就是游戏里真正会变矿的地方。</p>
-     */
-    private static BlockPos findNearestOreBiome(ServerLevel level, int blockX, int blockZ) {
-        List<BlockPos> candidates = OreBiomePatchMask.nearestPatchCenters(
-                blockX, blockZ, SEARCH_RADIUS, MAX_CANDIDATES);
-        BlockPos fallback = null;
-        for (BlockPos candidate : candidates) {
-            BlockPos hit = probeCandidate(level, candidate);
-            if (hit != null) {
-                return hit;
-            }
-            // 一个可用点都没找到时（比如周围大片是海洋），至少把网格上最近的、
-            // 不在出生点保护圈里的斑心报出来，而不是干脆说「找不到」。
-            if (fallback == null && !SpawnGuard.withinProtectedRadius(
-                    candidate.getX(), candidate.getZ())) {
-                fallback = candidate;
-            }
-        }
-        return fallback;
-    }
-
-    /** 在候选圆斑的中心和周边几个点里，挑第一个确实能变成矿石群系的位置。 */
-    private static BlockPos probeCandidate(ServerLevel level, BlockPos center) {
-        if (isUsableSpot(level, center.getX(), center.getZ())) {
-            return center;
-        }
-        int offset = Math.max(8, (int) Math.round(
-                OreBiomeSettings.get().biomeSize().patchLatticeBlocks() * 0.32D));
-        int[][] offsets = {
-                {offset, 0}, {-offset, 0}, {0, offset}, {0, -offset},
-                {offset, offset}, {-offset, offset}, {offset, -offset}, {-offset, -offset}
-        };
-        for (int[] step : offsets) {
-            int x = center.getX() + step[0];
-            int z = center.getZ() + step[1];
-            if (isUsableSpot(level, x, z)) {
-                return new BlockPos(x, 64, z);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 这个坐标是不是「按规则会变成矿石群系」的地方。
-     *
-     * <p>三道判断，全都不依赖注入是否生效：出生点保护圈外、圆斑遮罩内、原版地形不是
-     * 水域/海岸。最后一道用当前群系源实际查一次——注入生效时这里返回的就是矿石群系，
-     * 直接通过；注入没生效时返回原版群系，用同一套陆地规则判断，结果一样。</p>
-     */
-    private static boolean isUsableSpot(ServerLevel level, int blockX, int blockZ) {
-        if (SpawnGuard.withinProtectedRadius(blockX, blockZ)) {
-            return false;
-        }
-        if (!OreBiomePatchMask.allows(blockX, blockZ)) {
-            return false;
-        }
-        Holder<Biome> here = probeBiome(level, blockX, blockZ);
-        if (here == null) {
-            return false;
-        }
-        if (SpawnGuard.isOreBiome(here)) {
-            return true;
-        }
-        return OreBiomeLandFilter.isReplaceableLand(here);
-    }
-
-    /**
-     * 直接问群系源：这个坐标生成出来的是什么群系。
-     * 不加载区块，只在气候采样层问一次，所以几千格开外也能瞬间判断。
-     */
-    private static Holder<Biome> probeBiome(ServerLevel level, int blockX, int blockZ) {
-        try {
-            BiomeSource source = level.getChunkSource().getGenerator().getBiomeSource();
-            // 记下实际用的群系源类名：整合包里换了群系模组时，这一行是排查兼容问题的第一手信息
-            OreBiomeDiagnostics.noteBiomeSource(source.getClass().getName());
-            Climate.Sampler sampler = level.getChunkSource().randomState().sampler();
-            return source.getNoiseBiome(
-                    QuartPos.fromBlock(blockX),
-                    QuartPos.fromBlock(64),
-                    QuartPos.fromBlock(blockZ),
-                    sampler);
-        } catch (Throwable ignored) {
-            return null;
-        }
     }
 
     /**
@@ -320,14 +211,6 @@ public final class OreBiomeCommand {
         return "群系替换：正常（已替换 " + OreBiomeDiagnostics.replacedCount() + " 格群系）";
     }
 
-    /** 当前模组版本号，用来确认 mods 文件夹里装的是不是最新那个 jar。 */
-    private static String modVersion() {
-        return ModList.get()
-                .getModContainerById(OreBiomeReborn.MOD_ID)
-                .map(container -> container.getModInfo().getVersion().toString())
-                .orElse("未知");
-    }
-
     /** 「你脚下的群系是什么、是不是矿石群系」这一行，直接回答「这儿为什么没矿」。 */
     private static Component biomeLine(CommandContext<CommandSourceStack> context) {
         Holder<Biome> here;
@@ -361,16 +244,25 @@ public final class OreBiomeCommand {
             case HUGE -> "超大";
         };
         if (size == OreBiomeSettings.BiomeSize.HUGE) {
-            // 超大档的圆斑互相重叠，已经没有「一片」的边界了，报覆盖率更有意义
-            return label + "（矿石群系几乎铺满整片地面，只零星留下小块别的群系）";
+            // 超大档一片就将近两千格宽，但出斑率极低：平均要跑一万格才碰上一片
+            return label + "（片区直径约 1840 格，占全地图约 2.2%；平均一万格遇到一片）";
         }
         int diameter = switch (size) {
-            case SMALL -> 160;
-            case MEDIUM -> 320;
-            case LARGE -> 640;
-            case HUGE -> 2560;
+            case SMALL -> 170;
+            case MEDIUM -> 340;
+            case LARGE -> 690;
+            case HUGE -> 1840;
         };
-        return label + "（片区直径约 " + diameter + " 格）";
+        // 覆盖率 = 出斑率 × 圆斑面积 ÷ 格距²，四档都按「平均一万格遇到一片」反推，
+        // 所以只有「一片多大、盖住多少地面」在变，遇到的稀罕程度是一样的。
+        String coverage = switch (size) {
+            case SMALL -> "0.03%";
+            case MEDIUM -> "0.13%";
+            case LARGE -> "0.55%";
+            case HUGE -> "2.2%";
+        };
+        return label + "（片区直径约 " + diameter + " 格，占全地图约 " + coverage
+                + "；平均一万格遇到一片）";
     }
 
     private static String spawnGuardText(OreBiomeSettings settings,

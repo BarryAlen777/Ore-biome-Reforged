@@ -1,5 +1,9 @@
 {
   "mappings": {
+    "cn/blockforge/generated/orebiomereborn/mixin/LocateCommandMixin": {
+      "locateBiome": "Lnet/minecraft/server/commands/LocateCommand;m_247543_(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I",
+      "locateBiome(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I": "Lnet/minecraft/server/commands/LocateCommand;m_247543_(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I"
+    },
     "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
       "collectPossibleBiomes": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
       "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;"
@@ -15,6 +19,10 @@
   },
   "data": {
     "searge": {
+      "cn/blockforge/generated/orebiomereborn/mixin/LocateCommandMixin": {
+        "locateBiome": "Lnet/minecraft/server/commands/LocateCommand;m_247543_(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I",
+        "locateBiome(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I": "Lnet/minecraft/server/commands/LocateCommand;m_247543_(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/commands/arguments/ResourceOrTagArgument$Result;)I"
+      },
       "cn/blockforge/generated/orebiomereborn/mixin/MultiNoiseBiomeSourceMixin": {
         "collectPossibleBiomes": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;",
         "collectPossibleBiomes()Ljava/util/stream/Stream;": "Lnet/minecraft/world/level/biome/MultiNoiseBiomeSource;m_274359_()Ljava/util/stream/Stream;"

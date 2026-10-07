@@ -2,7 +2,7 @@
   "biome.ore_biome_reforged.ore_biome": "矿石生态群系",
   "biome.ore_biome_reforged.ore": "矿石",
   "commands.orebiome.found": "最近的矿石生态群系在 X=%s, Y=%s, Z=%s（离你约 %s 格）",
-  "commands.orebiome.tp_hint": "想直接过去就输入 /orebiome tp",
+  "commands.orebiome.tp_hint": "想直接过去就输入 /orebiome tp；也可以直接用原版 /locate biome ore_biome_reforged:ore_biome，同样秒回坐标",
   "commands.orebiome.success": "已传送到最近的矿石生态群系（X=%s, Z=%s）",
   "commands.orebiome.not_found": "附近 %s 格内没有能生成矿石群系的陆地（周围可能全是海洋，或都在出生点保护圈里）",
   "commands.orebiome.reloaded": "已从配置文件重新读取矿石群系设置"

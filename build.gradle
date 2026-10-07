@@ -1,5 +1,5 @@
 plugins { id 'java'; id 'net.minecraftforge.gradle' version '[6.0,6.2)' }
-version = '1.2.2-r37'
+version = '1.2.5-r42'
 group = 'cn.blockforge.generated.orebiomereborn'
 base { archivesName = 'ore_biome_reforged' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)

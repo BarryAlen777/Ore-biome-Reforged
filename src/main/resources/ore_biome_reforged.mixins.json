@@ -7,7 +7,8 @@
   "mixins": [
     "MultiNoiseBiomeSourceMixin",
     "NoiseBasedChunkGeneratorMixin",
-    "ChunkGeneratorMixin"
+    "ChunkGeneratorMixin",
+    "LocateCommandMixin"
   ],
   "injectors": {
     "defaultRequire": 1
