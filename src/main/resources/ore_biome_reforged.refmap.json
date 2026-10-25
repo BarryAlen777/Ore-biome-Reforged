@@ -15,6 +15,10 @@
     "cn/blockforge/generated/orebiomereborn/mixin/ChunkGeneratorMixin": {
       "createBiomes": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
       "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+    },
+    "cn/blockforge/generated/orebiomereborn/mixin/ServerLevelMixin": {
+      "getUncachedNoiseBiome": "Lnet/minecraft/server/level/ServerLevel;m_203675_(III)Lnet/minecraft/core/Holder;",
+      "getUncachedNoiseBiome(III)Lnet/minecraft/core/Holder;": "Lnet/minecraft/server/level/ServerLevel;m_203675_(III)Lnet/minecraft/core/Holder;"
     }
   },
   "data": {
@@ -34,6 +38,10 @@
       "cn/blockforge/generated/orebiomereborn/mixin/ChunkGeneratorMixin": {
         "createBiomes": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
         "createBiomes(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213908_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+      },
+      "cn/blockforge/generated/orebiomereborn/mixin/ServerLevelMixin": {
+        "getUncachedNoiseBiome": "Lnet/minecraft/server/level/ServerLevel;m_203675_(III)Lnet/minecraft/core/Holder;",
+        "getUncachedNoiseBiome(III)Lnet/minecraft/core/Holder;": "Lnet/minecraft/server/level/ServerLevel;m_203675_(III)Lnet/minecraft/core/Holder;"
       }
     }
   }

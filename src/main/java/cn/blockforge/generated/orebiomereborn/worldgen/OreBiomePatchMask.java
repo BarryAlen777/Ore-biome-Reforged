@@ -25,7 +25,7 @@ import java.util.List;
  * 0.1%）。早先的版本出斑率是 0.22（超大档 1.0），覆盖率约 15%，地图上到处是
  * 灰蒙蒙的矿区，这一版就是冲着那个问题改的。数值由 {@code sim_mask.py} 复核。</p>
  *
- * <p>海洋、河流、沙滩、恶地则由注入里的原版群系标签检查单独排除。</p>
+ * <p>海洋、河流、沙滩、海岸、恶地则由 {@link OreBiomeLandFilter} 按群系 ID 单独排除。</p>
  */
 public final class OreBiomePatchMask {
 

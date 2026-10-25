@@ -17,7 +17,7 @@ public final class OreBiomeDiagnostics {
     private static final AtomicLong PROTECTED = new AtomicLong();
     /** 圆斑遮罩外、没动的群系格数。 */
     private static final AtomicLong MASK_REJECTED = new AtomicLong();
-    /** 遮罩内但原版是水域/海岸、没动的群系格数。 */
+    /** 遮罩内但整列是水域/海岸/恶地、没动的群系列数。 */
     private static final AtomicLong NON_LAND = new AtomicLong();
     /** 群系表还没就绪（拿不到矿石群系句柄）而跳过的次数。 */
     private static final AtomicLong HOLDER_MISSING = new AtomicLong();

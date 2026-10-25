@@ -5,5 +5,7 @@
   "commands.orebiome.tp_hint": "Run /orebiome tp to travel there, or use /locate biome ore_biome_reforged:ore_biome for an instant lookup",
   "commands.orebiome.success": "Teleported to the nearest Ore Biome (X=%s, Z=%s)",
   "commands.orebiome.not_found": "No land that can become an Ore Biome within %s blocks (the area may be all ocean, or inside the spawn protection ring)",
-  "commands.orebiome.reloaded": "Ore biome config reloaded from file"
+  "commands.orebiome.reloaded": "Ore biome config reloaded from file",
+  "advancements.ore_biome_reforged.ore_continent.title": "Ore Continent",
+  "advancements.ore_biome_reforged.ore_continent.description": "Find an Ore Biome"
 }

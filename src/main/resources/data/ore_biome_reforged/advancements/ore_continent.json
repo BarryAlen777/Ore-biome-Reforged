@@ -1,0 +1,30 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:iron_ore"
+    },
+    "title": {
+      "translate": "advancements.ore_biome_reforged.ore_continent.title"
+    },
+    "description": {
+      "translate": "advancements.ore_biome_reforged.ore_continent.description"
+    },
+    "frame": "goal",
+    "background": "minecraft:textures/block/deepslate.png",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "reached_ore_biome": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biome": "ore_biome_reforged:ore_biome"
+          }
+        }
+      }
+    }
+  }
+}

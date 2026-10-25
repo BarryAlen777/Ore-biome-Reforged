@@ -77,7 +77,7 @@ public final class OreBiomeCommand {
                             + "（地表往下 " + density.pick(6, 14, 26) + " 格、含矿率 "
                             + density.pick(60, 160, 340) / 10 + "%）"));
                     lines.add(Component.literal("群系大小：" + biomeSizeText(settings)
-                            + "（改完要退出世界再进才生效）"));
+                            + "（改完立刻生效，已经生成过的老区块不变）"));
                     lines.add(Component.literal("出生点保护：" + spawnGuardText(settings, context)));
                     lines.add(biomeLine(context));
                     lines.add(Component.literal("原版矿石：开 " + vanillaOn + " / " + OreBiomeSettings.VANILLA_ORES.size()));
@@ -93,12 +93,14 @@ public final class OreBiomeCommand {
                         lines.add(Component.literal("  ……其余 " + (enabled.size() - 6) + " 种略"));
                     }
                     lines.add(Component.literal("地表矿石层可用的矿种：" + pool.size()
-                            + (pool.isEmpty() ? "   ← 一种都没有，所以什么都不会生成" : "")));
+                            + (pool.isEmpty()
+                            ? "   ← 一种都没有，矿石群系里只会铺石头，不会出矿"
+                            : "")));
                     lines.add(Component.literal("区块群系重写：已处理 " + OreBiomeDiagnostics.chunks()
                             + " 个区块，替换 " + OreBiomeDiagnostics.replacedCount() + " 格群系"));
                     lines.add(Component.literal("拦截原因：出生点 " + OreBiomeDiagnostics.protectedAreaCount()
                             + "，遮罩外 " + OreBiomeDiagnostics.maskRejectedCount()
-                            + "，非陆地 " + OreBiomeDiagnostics.nonLandCount()
+                            + "，水域/恶地 " + OreBiomeDiagnostics.nonLandCount()
                             + "，句柄缺失 " + OreBiomeDiagnostics.holderMissingCount()));
                     lines.add(Component.literal("群系源类型：" + OreBiomeDiagnostics.biomeSourceClass()
                             + "（换了群系模组时这里会跟着变，用来排查兼容问题）"));

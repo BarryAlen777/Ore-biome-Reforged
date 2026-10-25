@@ -84,12 +84,13 @@ public class DenseOreLayerFeature extends Feature<NoneFeatureConfiguration> {
         // 「圈内不长矿石群系」去管，详见 ConfigurableOreFeature 里的说明。
         OreBiomeSettings settings = OreBiomeSettings.get();
         OrePool pool = OrePool.forSettings(settings);
-        if (pool.isEmpty()) {
-            return false;
-        }
         OreBiomeSettings.Density density = settings.density();
+        // 一种矿都没开时不能整块地放弃：草皮和泥土还是要换成石头。
+        // 以前这里在池子空时直接 return false，结果是「矿石群系里长着完整的草皮和泥土」，
+        // 玩家看到一块贴着矿石群系名字的绿地，只会以为模组坏了。含矿率给 0 就只剩铺石头，
+        // 顺便也避免了对空池子调用 pick()（那边会对 0 取随机数炸掉）。
+        int permille = pool.isEmpty() ? 0 : density.pick(60, 160, 340);
         // 含矿率用千分比，避开浮点重载的歧义：稀疏 6%、适中 16%、稠密 34%
-        int permille = density.pick(60, 160, 340);
         // 表层泥土用双倍含矿率（封顶 90%），保证「稠密」在地表肉眼可见
         int soilPermille = Math.min(permille * 2, 900);
         int depth = density.pick(6, 14, 26);

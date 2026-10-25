@@ -8,6 +8,7 @@
     "MultiNoiseBiomeSourceMixin",
     "NoiseBasedChunkGeneratorMixin",
     "ChunkGeneratorMixin",
+    "ServerLevelMixin",
     "LocateCommandMixin"
   ],
   "injectors": {

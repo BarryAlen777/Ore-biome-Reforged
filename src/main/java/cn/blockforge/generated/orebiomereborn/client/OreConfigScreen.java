@@ -263,7 +263,7 @@ public class OreConfigScreen extends Screen {
                     contentX + 2, noteY + 12, 0xFFE5D9D0);
             drawTitle(graphics, "区别只是那片有多大：小 170 / 中 340 / 大 690 / 超大 1840 格",
                     contentX + 2, noteY + 24, 0xFFE5D9D0);
-            drawTitle(graphics, "片区外会自然回到原版群系；改完要退出世界再进，旧区块不会变化",
+            drawTitle(graphics, "片区外会自然回到原版群系；改完立刻生效，旧区块不会变化",
                     contentX + 2, noteY + 36, 0xFFFFD080);
         }
     }
@@ -504,7 +504,7 @@ public class OreConfigScreen extends Screen {
                 working.biomeSize().key().equals(value), () -> {
             working.biomeSize = value;
             dirty = true;
-            status = "群系大小已设为「" + biomeSizeLabel() + "」，退出世界再进才生效";
+            status = "群系大小已设为「" + biomeSizeLabel() + "」，点应用后立刻生效";
         });
     }
 
@@ -658,7 +658,9 @@ public class OreConfigScreen extends Screen {
     private void apply() {
         OreBiomeSettings.save(working);
         dirty = false;
-        status = "✔ 已应用：新配置只对之后生成的区块生效";
+        // 配置是内存里整体换掉的，世界生成下一次读就是新值：单人/局域网立刻生效。
+        // 多人服务器上请改服务器那边的 config 文件，客户端界面改不到服务端的配置。
+        status = "✔ 已应用，立刻生效：之后新生成的区块按新配置来，老区块不变";
     }
 
     private void resetDefaults() {

@@ -281,7 +281,11 @@ public final class OreBiomeSettings {
     }
 
     public boolean isVanillaOreEnabled(String ore) {
-        return vanillaOres == null || vanillaOres.getOrDefault(ore, true);
+        // 手改配置文件时可能写成 {"coal": null}：键在、值是 null。
+        // Map#getOrDefault 遇到「键存在但值为 null」会原样返回 null，直接拆箱就 NPE，
+        // 而这一句是在世界生成线程上调用的，崩一次就是整个存档打不开。按「没写 = 开」处理。
+        Boolean enabled = vanillaOres == null ? null : vanillaOres.get(ore);
+        return enabled == null || enabled;
     }
 
     private OreBiomeSettings() {
